@@ -1,0 +1,44 @@
+#ifndef GRID_WALKER
+#define GRID_WALKER
+
+////////////////////////////////////////////////////////////////////////////////
+/// Includes
+////////////////////////////////////////////////////////////////////////////////
+
+#include "Grid.hpp"
+#include "Path.hpp"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GridWalker
+////////////////////////////////////////////////////////////////////////////////
+///
+class GridWalker
+{
+public:
+    ////////////////////////////////////////////////////////////////////////////////
+    /// Public Constructors & Destructors
+
+    // Constructor
+    GridWalker( int rows, int columns, const Coordinate& startCoordinate );
+
+    // Destructor
+    ~GridWalker();
+
+private:
+    ////////////////////////////////////////////////////////////////////////////////
+    /// Private Init Variables
+
+    Grid m_GridToWalk;
+
+    std::vector< Path > m_PossiblePaths; 
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// Private Methods
+
+    void WalkPaths( Path pathSoFar, const Coordinate& currentCoordinate );
+
+    static std::vector< Direction > GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath );
+    static bool IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath );
+};
+
+#endif //GRID_WALKER
