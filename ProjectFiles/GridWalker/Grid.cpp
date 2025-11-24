@@ -10,7 +10,7 @@
 /// Grid
 ////////////////////////////////////////////////////////////////////////////////
 
-Grid::Grid( int rows, int columns )
+gw::Grid::Grid( int rows, int columns )
     : m_Rows{ rows }
     , m_Columns{ columns }
     , m_GridCells{ static_cast< size_t >( rows * columns ) }
@@ -18,20 +18,20 @@ Grid::Grid( int rows, int columns )
     for (std::size_t idx{}; idx < m_GridCells.size(); ++idx )
     {
         Coordinate& currentCell = m_GridCells[idx];
-        currentCell.m_RowIndex = idx / rows;
-        currentCell.m_ColumnIndex  = idx % rows;
+        currentCell.m_RowIndex = idx / columns;
+        currentCell.m_ColumnIndex  = idx % columns;
     }
 
     std::cout << rows << " x " << columns << " grid created";
     std::cout << *this;
 }
 
-Grid::~Grid()
+gw::Grid::~Grid()
 {
-    std::cout << m_GridCells.size() << " cells destroyed\n";
+    std::cout << "\n" << m_GridCells.size() << " cells destroyed\n";
 }
 
-bool Grid::IsWithinGridBounds( const Coordinate& coordinate ) const
+bool gw::Grid::IsWithinGridBounds( const Coordinate& coordinate ) const
 {
     return coordinate.m_RowIndex >= 0 
         && coordinate.m_RowIndex < m_Rows
@@ -39,36 +39,39 @@ bool Grid::IsWithinGridBounds( const Coordinate& coordinate ) const
         && coordinate.m_ColumnIndex < m_Columns;
 }
 
-size_t Grid::Size() const
+size_t gw::Grid::Size() const
 {
     return m_GridCells.size();
 }
 
-const int& Grid::Rows() const
+const int& gw::Grid::Rows() const
 {
     return m_Rows;
 }
 
-const int& Grid::Columns() const
+const int& gw::Grid::Columns() const
 {
     return m_Columns;
 }
 
-std::ostream &operator<<( std::ostream &outputStream, const Grid &grid )
+namespace gw
 {
-    int currentRowIndex{ 0 };
-    
-    outputStream << "\n\n";
-    for ( const Coordinate& coordinate : grid.m_GridCells )
+    std::ostream &operator<<( std::ostream &outputStream, const Grid &grid )
     {
-        if ( currentRowIndex != coordinate.m_RowIndex )
+        int currentRowIndex{ 0 };
+        
+        outputStream << "\n\n";
+        for ( const Coordinate& coordinate : grid.m_GridCells )
         {
-            outputStream << "\n";
+            if ( currentRowIndex != coordinate.m_RowIndex )
+            {
+                outputStream << "\n";
+            }
+            currentRowIndex = coordinate.m_RowIndex;
+            outputStream << coordinate << "\t";
         }
-        currentRowIndex = coordinate.m_RowIndex;
-        outputStream << coordinate << "\t";
-    }
-    outputStream << "\n\n";
+        outputStream << "\n\n";
 
-    return outputStream;
-}
+        return outputStream;
+    }
+} //gw

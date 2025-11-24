@@ -9,21 +9,24 @@
 
 #include "Direction.hpp"
 
-////////////////////////////////////////////////////////////////////////////////
-/// Coordinates
-////////////////////////////////////////////////////////////////////////////////
-///
-struct Coordinate
+namespace gw
 {
-    int m_RowIndex{};
-    int m_ColumnIndex{};
-
-    void MoveCoordinateByOne( const Direction& direction );
-
-    bool operator==( const Coordinate& other ) const;
-
-    friend std::ostream& operator<<( std::ostream& outputStream, const Coordinate& coordinate );
-
-};
+    ////////////////////////////////////////////////////////////////////////////////
+    /// Coordinates
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    struct Coordinate
+    {
+        int m_RowIndex{};
+        int m_ColumnIndex{};
+        
+        void MoveCoordinateByOne( const Direction& direction );
+        
+        bool operator==( const Coordinate& other ) const;
+        
+        friend std::ostream& operator<<( std::ostream& outputStream, const Coordinate& coordinate );
+    };
+    
+} //gw
 
 #endif //COORDINATE

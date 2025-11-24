@@ -8,13 +8,8 @@
 /// Coordinates
 ////////////////////////////////////////////////////////////////////////////////
 
-std::ostream &operator<<( std::ostream& outputStream, const Coordinate& coordinates )
-{
-    outputStream << "[" << coordinates.m_RowIndex << ", " << coordinates.m_ColumnIndex << "]";
-    return outputStream;
-}
 
-void Coordinate::MoveCoordinateByOne( const Direction& direction )
+void gw::Coordinate::MoveCoordinateByOne( const Direction& direction )
 {
     switch( direction )
     {
@@ -45,7 +40,16 @@ void Coordinate::MoveCoordinateByOne( const Direction& direction )
     }
 }
 
-bool Coordinate::operator==( const Coordinate& other ) const
+bool gw::Coordinate::operator==( const Coordinate& other ) const
 {
     return m_RowIndex == other.m_RowIndex && m_ColumnIndex == other.m_ColumnIndex;
 }
+
+namespace gw 
+{
+    std::ostream &operator<<( std::ostream& outputStream, const Coordinate& coordinates )
+    {
+        outputStream << "[" << coordinates.m_RowIndex << ", " << coordinates.m_ColumnIndex << "]";
+        return outputStream;
+    }
+} //gw

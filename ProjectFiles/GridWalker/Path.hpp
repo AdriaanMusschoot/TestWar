@@ -10,50 +10,55 @@
 #include "Coordinate.hpp"
 #include "Grid.hpp"
 
-////////////////////////////////////////////////////////////////////////////////
-/// PathElement
-////////////////////////////////////////////////////////////////////////////////
-///
-struct PathElement
+namespace gw
 {
-    Coordinate m_Coordinate;
-    Direction m_Direction;
-
-    bool operator==( const Coordinate& other ) const
+    ////////////////////////////////////////////////////////////////////////////////
+    /// PathElement
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    struct PathElement
     {
-        return m_Coordinate == other;
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/// Path
-////////////////////////////////////////////////////////////////////////////////
-///
-class Path
-{
-public:
+        Coordinate m_Coordinate;
+        Direction m_Direction;
+        
+        bool operator==( const Coordinate& other ) const
+        {
+            return m_Coordinate == other;
+        }
+    };
+    
     ////////////////////////////////////////////////////////////////////////////////
-    /// Public Constructors & Destructors
-
-    /// Costructor.
-    Path( Grid& grid );
-
+    /// Path
     ////////////////////////////////////////////////////////////////////////////////
-    /// Public Methods
+    ///
+    class Path
+    {
+    public:
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Constructors & Destructors
 
-    bool AlreadyVisited( const Coordinate& coordinate ) const;
-    PathElement& AddStep( const Coordinate& coordinate );
-    std::size_t Length() const;
-    int FindCoordinateIndex( int rowIndex, int columnIndex ) const;
+        /// Costructor.
+        Path( Grid& grid );
 
-    friend std::ostream& operator<<(std::ostream& outputStream, const Path& path);
-private:
-    ////////////////////////////////////////////////////////////////////////////////
-    /// Private Runtime Properties
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Methods
 
-    Grid& m_GridReference;
+        bool AlreadyVisited( const Coordinate& coordinate ) const;
+        PathElement& AddStep( const Coordinate& coordinate );
+        std::size_t Length() const;
+        int FindCoordinateIndex( int rowIndex, int columnIndex ) const;
 
-    std::vector< PathElement > m_PathElements;
-};
+        friend std::ostream& operator<<( std::ostream& outputStream, const Path& path );
+
+    private:
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Private Runtime Properties
+
+        Grid& m_GridReference;
+
+        std::vector< PathElement > m_PathElements;
+    };
+
+} //gw
 
 #endif //PATH

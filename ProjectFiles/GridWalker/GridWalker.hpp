@@ -7,38 +7,47 @@
 
 #include "Grid.hpp"
 #include "Path.hpp"
+#include <mutex>
 
-////////////////////////////////////////////////////////////////////////////////
-/// GridWalker
-////////////////////////////////////////////////////////////////////////////////
-///
-class GridWalker
+namespace gw
 {
-public:
     ////////////////////////////////////////////////////////////////////////////////
-    /// Public Constructors & Destructors
-
-    // Constructor
-    GridWalker( int rows, int columns, const Coordinate& startCoordinate );
-
-    // Destructor
-    ~GridWalker();
-
-private:
+    /// GridWalker
     ////////////////////////////////////////////////////////////////////////////////
-    /// Private Init Variables
-
-    Grid m_GridToWalk;
-
-    std::vector< Path > m_PossiblePaths; 
-
-    ////////////////////////////////////////////////////////////////////////////////
-    /// Private Methods
-
-    void WalkPaths( Path pathSoFar, const Coordinate& currentCoordinate );
-
-    static std::vector< Direction > GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath );
-    static bool IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath );
-};
+    ///
+    class GridWalker
+    {
+        public:
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Constructors & Destructors
+        
+        // Constructor
+        GridWalker( Grid& gridToWalk );
+        
+        // Destructor
+        ~GridWalker();
+    
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Methods
+    
+        void WalkPaths( Path pathSoFar, const Coordinate& startCoordinate );
+        
+        void StartWalkingPathsThreaded( Path pathSoFar, const Coordinate& startCoordinate );
+    private:
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Private Init Variables
+        
+        Grid& m_GridToWalk;
+        
+        std::mutex m_PathMutex;
+        std::vector< Path > m_PossiblePaths; 
+        
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Private Methods
+                
+        static std::vector< Direction > GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath );
+        static bool IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath );
+    };
+} //gw
 
 #endif //GRID_WALKER

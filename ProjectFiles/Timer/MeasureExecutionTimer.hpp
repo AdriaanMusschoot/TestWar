@@ -1,50 +1,40 @@
-#ifndef GRID
-#define GRID
+#ifndef MEASURE_EXECUTION_TIMER
+#define MEASURE_EXECUTION_TIMER
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Includes
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <vector>
-#include <iostream>
+#include <chrono>
+#include <functional>
 
-#include "Coordinate.hpp"
-
-namespace gw
+namespace xtm
 {
     ////////////////////////////////////////////////////////////////////////////////
-    /// Grid
+    /// MeasureExecutionTimer
     ////////////////////////////////////////////////////////////////////////////////
     ///
-    class Grid
+    class MeasureExecutionTimer
     {
     public:
         ////////////////////////////////////////////////////////////////////////////////
         /// Public Constructors & Destructors
         
-        // Constructor
-        Grid( int rows, int columns );
+        /// Constructor.
+        MeasureExecutionTimer( std::function< void() > functionToMeasure );
+
+        /// Destructor.
+        ~MeasureExecutionTimer();
         
-        // Destructor
-        ~Grid();
-        
-        friend std::ostream& operator<<( std::ostream& outputStream, const Grid& grid );
-        
-        bool IsWithinGridBounds( const Coordinate& coordinate ) const;
-        size_t Size() const;
-        
-        const int& Rows() const; 
-        const int& Columns() const; 
-        
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Methods
+
     private:
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Init Properties
         
-        const int m_Rows;
-        const int m_Columns;
-        std::vector< Coordinate > m_GridCells;
-        
+        std::chrono::time_point< std::chrono::system_clock > m_StartTime;
     };
-} //gw
+}
 
-#endif //GRID
+#endif //PATH

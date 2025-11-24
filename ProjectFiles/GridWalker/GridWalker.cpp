@@ -6,31 +6,27 @@
 
 #include <cassert>
 #include <algorithm>
+#include <thread>
+#include <future>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// GridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-GridWalker::GridWalker( int rows, int columns, const Coordinate& startCoordinate  )
-    : m_GridToWalk{ rows, columns }
+gw::GridWalker::GridWalker(  Grid& gridToWalk )
+    : m_GridToWalk{ gridToWalk }
     , m_PossiblePaths{}
 {
-    assert( startCoordinate.m_RowIndex < rows );
-    assert( startCoordinate.m_ColumnIndex < columns );
-
-    WalkPaths( Path{ m_GridToWalk }, startCoordinate );
-
-    std::cout << "Possible Paths: " << m_PossiblePaths.size() << "\n";
 }
 
-GridWalker::~GridWalker()
+gw::GridWalker::~GridWalker()
 {
-    std::cout << "\n\nGrid Walker Destroyed";
+    std::cout << m_PossiblePaths.size() << " possible paths\n";
 }
 
-void GridWalker::WalkPaths( Path pathSoFar, const Coordinate& currentCoordinate )
+void gw::GridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
 {
-    auto&[ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( currentCoordinate );
+    auto&[ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     std::vector< Direction > possibleDirections{ GetPossibleDirections( m_GridToWalk, currentPathCoordinate, pathSoFar ) };
 
     for ( const Direction& possibleDirection: possibleDirections )
@@ -43,12 +39,38 @@ void GridWalker::WalkPaths( Path pathSoFar, const Coordinate& currentCoordinate 
 
     if ( pathSoFar.Length() == m_GridToWalk.Size() )
     {
+        std::scoped_lock pathLock{ m_PathMutex };
         m_PossiblePaths.emplace_back( pathSoFar );
-        std::cout << pathSoFar << "\n";
     }
 }
 
-std::vector< Direction > GridWalker::GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath )
+void gw::GridWalker::StartWalkingPathsThreaded( Path pathSoFar, const Coordinate& startCoordinate )
+{
+    auto&[ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
+    std::vector< Direction > possibleDirections{ GetPossibleDirections( m_GridToWalk, currentPathCoordinate, pathSoFar ) };
+
+    std::vector< std::jthread > jthreads{};
+    for ( const Direction& possibleDirection : possibleDirections )
+    {
+        currentPathDirection = possibleDirection;
+
+        Coordinate nextCoordinate{ currentPathCoordinate };
+        nextCoordinate.MoveCoordinateByOne( possibleDirection );
+        
+        jthreads.emplace_back
+        (
+            std::jthread
+            {
+                [ =, this ]()
+                {
+                    WalkPaths( pathSoFar, nextCoordinate );
+                }
+            }
+        );
+    }
+}
+
+std::vector< gw::Direction > gw::GridWalker::GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath )
 {
     std::vector< Direction > possibleDirections{};
     possibleDirections.reserve( 4 );
@@ -76,7 +98,7 @@ std::vector< Direction > GridWalker::GetPossibleDirections( const Grid& grid, co
     return possibleDirections;
 }
 
-bool GridWalker::IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath )
+bool gw::GridWalker::IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath )
 {
     Coordinate coordinateToTry{ currentCoordinate };
     coordinateToTry.MoveCoordinateByOne( direction );
