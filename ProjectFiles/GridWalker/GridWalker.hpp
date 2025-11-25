@@ -8,6 +8,7 @@
 #include "Grid.hpp"
 #include "Path.hpp"
 #include <mutex>
+#include <thread>
 
 namespace gw
 {
@@ -32,7 +33,10 @@ namespace gw
     
         void WalkPaths( Path pathSoFar, const Coordinate& startCoordinate );
         
-        void StartWalkingPathsThreaded( Path pathSoFar, const Coordinate& startCoordinate );
+        void StartWalkingPathsDoubleThreaded( Path pathSoFar, const Coordinate& startCoordinate );
+        
+        void StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordinate& startCoordinate, int layer = 0);
+
     private:
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Init Variables
@@ -41,6 +45,9 @@ namespace gw
         
         std::mutex m_PathMutex;
         std::vector< Path > m_PossiblePaths; 
+
+        std::mutex m_ThreadMutex;
+        std::vector< std::jthread > m_JThreads;
         
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Methods

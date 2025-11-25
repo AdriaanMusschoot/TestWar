@@ -9,16 +9,41 @@
 
 int main()
 {
-    gw::Grid grid{ 6, 9 };
+    gw::Grid grid{ 5, 7 };
     
     {
-        gw::GridWalker gridWalker{ grid };
-        auto FunctionToMeasure{ std::bind( &gw::GridWalker::WalkPaths, &gridWalker, gw::Path{ grid }, gw::Coordinate{ 0, 0 } ) };
+        auto FunctionToMeasure 
+        {
+            [&]()
+            {
+                gw::GridWalker gridWalker{ grid };
+                gridWalker.StartWalkingPathsMaxThreaded( gw::Path{ grid }, gw::Coordinate{ 0, 0 } );
+            }
+        };
+        
         xtm::MeasureExecutionTimer extimer{ FunctionToMeasure };
     }
     {
-        gw::GridWalker gridWalker{ grid };
-        auto FunctionToMeasure{ std::bind( &gw::GridWalker::StartWalkingPathsThreaded, &gridWalker, gw::Path{ grid }, gw::Coordinate{ 0, 0 } ) };
+        auto FunctionToMeasure 
+        {
+            [&]()
+            {
+                gw::GridWalker gridWalker{ grid };
+                gridWalker.StartWalkingPathsDoubleThreaded( gw::Path{ grid }, gw::Coordinate{ 0, 0 } );
+            }
+        };
+        
+        xtm::MeasureExecutionTimer extimer{ FunctionToMeasure };
+    }
+    {
+        auto FunctionToMeasure 
+        {
+            [&]()
+            {
+                gw::GridWalker gridWalker{ grid };
+                gridWalker.WalkPaths( gw::Path{ grid }, gw::Coordinate{ 0, 0 } );
+            }
+        };
         xtm::MeasureExecutionTimer extimer{ FunctionToMeasure };
     }
 }

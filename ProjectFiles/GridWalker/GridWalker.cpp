@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <algorithm>
-#include <thread>
 #include <future>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,11 +16,22 @@ gw::GridWalker::GridWalker(  Grid& gridToWalk )
     : m_GridToWalk{ gridToWalk }
     , m_PossiblePaths{}
 {
+    m_JThreads.reserve( std::thread::hardware_concurrency() );
 }
 
 gw::GridWalker::~GridWalker()
 {
-    std::cout << m_PossiblePaths.size() << " possible paths\n";
+    // need to call threads.join 
+    // otherwise threads only dissapear at the end of this function 
+    // and print is called before possible paths is filled up
+    for ( std::jthread& jthread : m_JThreads )
+    {
+        jthread.join();
+    }
+
+
+    std::cout <<  m_PossiblePaths.size() << " possible paths\n";
+    //join threads
 }
 
 void gw::GridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
@@ -31,9 +41,11 @@ void gw::GridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinat
 
     for ( const Direction& possibleDirection: possibleDirections )
     {
+        currentPathDirection = possibleDirection;
+
         Coordinate nextCoordinate{ currentPathCoordinate };
         nextCoordinate.MoveCoordinateByOne( possibleDirection );
-        currentPathDirection = possibleDirection;
+        
         WalkPaths( pathSoFar, nextCoordinate );
     }
 
@@ -44,12 +56,12 @@ void gw::GridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinat
     }
 }
 
-void gw::GridWalker::StartWalkingPathsThreaded( Path pathSoFar, const Coordinate& startCoordinate )
+void gw::GridWalker::StartWalkingPathsDoubleThreaded( Path pathSoFar, const Coordinate& startCoordinate )
 {
-    auto&[ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
+    auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     std::vector< Direction > possibleDirections{ GetPossibleDirections( m_GridToWalk, currentPathCoordinate, pathSoFar ) };
 
-    std::vector< std::jthread > jthreads{};
+    std::vector< std::jthread > jthreads;
     for ( const Direction& possibleDirection : possibleDirections )
     {
         currentPathDirection = possibleDirection;
@@ -67,6 +79,40 @@ void gw::GridWalker::StartWalkingPathsThreaded( Path pathSoFar, const Coordinate
                 }
             }
         );
+    }
+}
+
+void gw::GridWalker::StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordinate& startCoordinate, int layer )
+{
+    auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
+    std::vector< Direction > possibleDirections{ GetPossibleDirections( m_GridToWalk, currentPathCoordinate, pathSoFar ) };
+
+    for ( const Direction& possibleDirection : possibleDirections )
+    {
+        currentPathDirection = possibleDirection;
+
+        Coordinate nextCoordinate{ currentPathCoordinate };
+        nextCoordinate.MoveCoordinateByOne( possibleDirection );
+        
+        if ( std::scoped_lock threadLock{ m_ThreadMutex }; 
+             m_JThreads.size() < std::thread::hardware_concurrency() &&
+             layer < 2 )
+        {
+            m_JThreads.emplace_back
+            (
+                std::jthread
+                {
+                    [ =, this ]()
+                    {
+                        StartWalkingPathsMaxThreaded( pathSoFar, nextCoordinate, layer + 1 );
+                    }
+                }
+            );
+        }
+        else 
+        {
+            WalkPaths( pathSoFar, nextCoordinate );
+        }
     }
 }
 
