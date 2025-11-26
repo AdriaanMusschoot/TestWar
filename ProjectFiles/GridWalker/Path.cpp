@@ -10,7 +10,7 @@
 /// Path
 ////////////////////////////////////////////////////////////////////////////////
 
-gw::Path::Path( Grid& grid )
+gw::Path::Path( const Grid& grid )
     : m_GridReference{ grid }
 {
 }

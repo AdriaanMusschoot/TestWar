@@ -12,9 +12,8 @@
 /// GridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-gw::GridWalker::GridWalker(  Grid& gridToWalk )
+gw::GridWalker::GridWalker( const Grid& gridToWalk )
     : m_GridToWalk{ gridToWalk }
-    , m_PossiblePaths{}
 {
     m_JThreads.reserve( std::thread::hardware_concurrency() );
 }
@@ -85,7 +84,7 @@ void gw::GridWalker::StartWalkingPathsDoubleThreaded( Path pathSoFar, const Coor
 void gw::GridWalker::StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordinate& startCoordinate, int layer )
 {
     auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
-    std::vector< Direction > possibleDirections{ GetPossibleDirections( m_GridToWalk, currentPathCoordinate, pathSoFar ) };
+    const std::vector< Direction > possibleDirections{ GetPossibleDirections( m_GridToWalk, currentPathCoordinate, pathSoFar ) };
 
     for ( const Direction& possibleDirection : possibleDirections )
     {
@@ -94,29 +93,37 @@ void gw::GridWalker::StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordin
         Coordinate nextCoordinate{ currentPathCoordinate };
         nextCoordinate.MoveCoordinateByOne( possibleDirection );
         
-        if ( std::scoped_lock threadLock{ m_ThreadMutex }; 
-             m_JThreads.size() < std::thread::hardware_concurrency() &&
-             layer < 2 )
+        if ( layer == 2 )
         {
-            m_JThreads.emplace_back
-            (
-                std::jthread
-                {
-                    [ =, this ]()
+            if ( std::scoped_lock threadLock{ m_ThreadMutex };
+                 m_JThreads.size() < std::thread::hardware_concurrency() )
+            {
+                std::cout << "Threat created at layer " << layer << "\n";
+                m_JThreads.emplace_back
+                (
+                    std::jthread
                     {
-                        StartWalkingPathsMaxThreaded( pathSoFar, nextCoordinate, layer + 1 );
+                        [ =, this ]()
+                        {
+                            StartWalkingPathsMaxThreaded( pathSoFar, nextCoordinate, layer + 1 );
+                        }
                     }
-                }
-            );
+                );
+
+                continue;
+            }
         }
-        else 
-        {
-            WalkPaths( pathSoFar, nextCoordinate );
-        }
+        StartWalkingPathsMaxThreaded( pathSoFar, nextCoordinate, layer + 1 );
+    }
+
+    if ( pathSoFar.Length() == m_GridToWalk.Size() )
+    {
+        std::scoped_lock pathLock{ m_PathMutex };
+        m_PossiblePaths.emplace_back( pathSoFar );
     }
 }
 
-std::vector< gw::Direction > gw::GridWalker::GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath )
+std::vector<gw::Direction> gw::GridWalker::GetPossibleDirections(const Grid &grid, const Coordinate &currentCoordinate, Path &walkedPath)
 {
     std::vector< Direction > possibleDirections{};
     possibleDirections.reserve( 4 );

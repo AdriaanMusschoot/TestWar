@@ -23,7 +23,7 @@ namespace gw
         /// Public Constructors & Destructors
         
         // Constructor
-        GridWalker( Grid& gridToWalk );
+        GridWalker( const Grid& gridToWalk );
         
         // Destructor
         ~GridWalker();
@@ -35,23 +35,27 @@ namespace gw
         
         void StartWalkingPathsDoubleThreaded( Path pathSoFar, const Coordinate& startCoordinate );
         
-        void StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordinate& startCoordinate, int layer = 0);
+        void StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordinate& startCoordinate, int layer = 0 );
 
+        // void WalkPathWithSeperatePathCollection( const Coordinate& startCoordinate, int layer = 0 );
     private:
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Init Variables
         
-        Grid& m_GridToWalk;
+        const Grid& m_GridToWalk;
         
         std::mutex m_PathMutex;
         std::vector< Path > m_PossiblePaths; 
 
         std::mutex m_ThreadMutex;
         std::vector< std::jthread > m_JThreads;
+
+        std::mutex m_ActiveThreadsMutex;
+        unsigned int m_ActiveThreads; 
         
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Methods
-                
+        
         static std::vector< Direction > GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath );
         static bool IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath );
     };

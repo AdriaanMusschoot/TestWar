@@ -38,7 +38,7 @@ namespace gw
         /// Public Constructors & Destructors
 
         /// Costructor.
-        Path( Grid& grid );
+        Path( const Grid& grid );
 
         ////////////////////////////////////////////////////////////////////////////////
         /// Public Methods
@@ -54,7 +54,7 @@ namespace gw
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Runtime Properties
 
-        Grid& m_GridReference;
+        const Grid& m_GridReference;
 
         std::vector< PathElement > m_PathElements;
     };
