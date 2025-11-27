@@ -7,8 +7,10 @@
 
 #include "Grid.hpp"
 #include "Path.hpp"
+
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 
 namespace gw
 {
@@ -137,7 +139,7 @@ namespace gw
         /// Public Constructors & Destructors
         
         // Constructor
-        MaxThreadedGridWalker( const Grid& gridToWalk, int layerToSpawnThreads );
+        MaxThreadedGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil );
         
         // Destructor
         virtual ~MaxThreadedGridWalker() override;
@@ -159,6 +161,47 @@ namespace gw
         std::mutex m_ThreadMutex{};
         std::vector< std::jthread > m_JThreads{};
 
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Private Methods
+        
+        void WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer = 0 );
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// CVMaxThreadedGridWalker
+    ////////////////////////////////////////////////////////////////////////////////
+    ///
+    class CVMaxThreadedGridWalker : public GridWalkerBase
+    {
+    public:
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Constructors & Destructors
+        
+        // Constructor
+        CVMaxThreadedGridWalker( const Grid& gridToWalk, int layerToSpawnThreads );
+        
+        // Destructor
+        virtual ~CVMaxThreadedGridWalker() override;
+
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Public Methods
+    
+        virtual void WalkPaths( Path pathSoFar, const Coordinate& startCoordinate ) override;
+        
+    private:
+        ////////////////////////////////////////////////////////////////////////////////
+        /// Private Init Variables
+
+        const int m_LayerToSpawnThreadsUntil{};
+
+        std::mutex m_AdditionalActiveThreadsMutex{};
+        unsigned int m_AdditionalActiveThreads{};
+
+        std::mutex m_ThreadMutex{};
+        std::vector< std::jthread > m_JThreads{};
+
+        std::condition_variable m_ConditionVaricableThreadExecution{};
+        
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Methods
         

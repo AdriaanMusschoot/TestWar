@@ -40,11 +40,13 @@ void WalkGridTimed( const gw::Grid& grid, Args&&... args )
 
 int main()
 {
-    const gw::Grid grid{ 5, 5 };
+    const gw::Grid grid{ 6, 6 };
     
+    constexpr int layer{ 3 };
     //fastest to slowest
-    WalkGridTimed< gw::MaxThreadedGridWalker >( grid, 3 );
-    WalkGridTimed< gw::LayeredThreadsGridWalker >( grid, 1 );
+    WalkGridTimed< gw::CVMaxThreadedGridWalker >( grid, layer );
+    WalkGridTimed< gw::MaxThreadedGridWalker >( grid, layer );
+    WalkGridTimed< gw::LayeredThreadsGridWalker >( grid, layer );
     WalkGridTimed< gw::DoubleThreadedGridWalker >( grid );
     WalkGridTimed< gw::RecursiveGridWalker >( grid );
 }

@@ -191,7 +191,6 @@ gw::MaxThreadedGridWalker::MaxThreadedGridWalker( const Grid& gridToWalk, int la
     : GridWalkerBase( gridToWalk )
     , m_LayerToSpawnThreadsUntil{ layerToSpawnThreadsUntil }
 {
-    m_JThreads.reserve( 100000 );
 }
 
 gw::MaxThreadedGridWalker::~MaxThreadedGridWalker()
@@ -245,10 +244,78 @@ void gw::MaxThreadedGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinat
                         [ =, this ]()
                         {
                             WalkPathsSingle( pathSoFar, nextCoordinate, layer + 1 );
-                            {
-                                std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
-                                --m_AdditionalActiveThreads;
-                            }
+                            
+                            std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
+                            --m_AdditionalActiveThreads;
+                        }
+                    }
+                );
+
+                ++m_AdditionalActiveThreads;
+
+                continue;
+            }
+        }
+        WalkPathsSingle( pathSoFar, nextCoordinate, layer + 1 );
+    }
+
+    if ( pathSoFar.Length() == GetGridReference().Size() )
+    {
+        AddPossiblePath( pathSoFar );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// CVMaxThreadedGridWalker
+////////////////////////////////////////////////////////////////////////////////
+
+gw::CVMaxThreadedGridWalker::CVMaxThreadedGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil )
+    : GridWalkerBase( gridToWalk )
+    , m_LayerToSpawnThreadsUntil{ layerToSpawnThreadsUntil }
+{
+}
+
+gw::CVMaxThreadedGridWalker::~CVMaxThreadedGridWalker()
+{
+    std::unique_lock lockActiveThreads{ m_AdditionalActiveThreadsMutex };
+    m_ConditionVaricableThreadExecution.wait( lockActiveThreads, [&](){ return m_AdditionalActiveThreads == 0; } );
+}
+
+void gw::CVMaxThreadedGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
+{
+    WalkPathsSingle( pathSoFar, startCoordinate );
+}
+
+void gw::CVMaxThreadedGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
+{
+    auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
+    const std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
+
+    for ( const Direction& possibleDirection : possibleDirections )
+    {
+        currentPathDirection = possibleDirection;
+
+        Coordinate nextCoordinate{ currentPathCoordinate };
+        nextCoordinate.MoveCoordinateByOne( possibleDirection );
+        
+        if ( layer <= m_LayerToSpawnThreadsUntil )
+        {
+            if ( std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
+                 m_AdditionalActiveThreads <= std::thread::hardware_concurrency() )
+            {
+                std::scoped_lock threadLock{ m_ThreadMutex };
+                
+                m_JThreads.emplace_back
+                (
+                    std::jthread
+                    {
+                        [ =, this ]()
+                        {
+                            WalkPathsSingle( pathSoFar, nextCoordinate, layer + 1 );
+
+                            std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
+                            --m_AdditionalActiveThreads;
+                            m_ConditionVaricableThreadExecution.notify_one();
                         }
                     }
                 );

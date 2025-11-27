@@ -34,7 +34,7 @@ xtm::MeasureExecutionTimer::~MeasureExecutionTimer()
     std::sort( m_ElapsedTimes.begin(), m_ElapsedTimes.end() );
 
     const double total{ std::accumulate( m_ElapsedTimes.begin() + outlierNumber, m_ElapsedTimes.end() - outlierNumber, 0.0 ) };
-    const double avg{total / m_ElapsedTimes.size() };
+    const double avg{ total / m_ElapsedTimes.size() };
 
     std::cout << avg << " seconds\n";
 }
