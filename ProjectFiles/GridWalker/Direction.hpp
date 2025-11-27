@@ -4,7 +4,7 @@ namespace gw
     /// Direction
     ////////////////////////////////////////////////////////////////////////////////
     
-    enum class Direction
+    enum class Direction : unsigned int
     {
         Up,
         Down,

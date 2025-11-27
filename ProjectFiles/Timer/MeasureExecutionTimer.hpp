@@ -21,7 +21,7 @@ namespace xtm
         /// Public Constructors & Destructors
         
         /// Constructor.
-        MeasureExecutionTimer( std::function< void() > functionToMeasure );
+        MeasureExecutionTimer( std::function< void() > functionToMeasure, int iterations );
 
         /// Destructor.
         ~MeasureExecutionTimer();
@@ -33,7 +33,7 @@ namespace xtm
         ////////////////////////////////////////////////////////////////////////////////
         /// Private Init Properties
         
-        std::chrono::time_point< std::chrono::system_clock > m_StartTime;
+        std::vector< double > m_ElapsedTimes;
     };
 }
 

@@ -1,11 +1,8 @@
-#ifndef COORDINATE
-#define COORDINATE
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Includes
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
+#include <vector>
 
 namespace gw
 {
@@ -13,24 +10,15 @@ namespace gw
     /// Forward Declarations
     ////////////////////////////////////////////////////////////////////////////////
 
+    class Grid;
+    class Coordinate;
+    class Path;
     enum class Direction : unsigned int;
 
     ////////////////////////////////////////////////////////////////////////////////
-    /// Coordinates
+    /// Lib Methods
     ////////////////////////////////////////////////////////////////////////////////
-    ///
-    struct Coordinate
-    {
-        int m_RowIndex{};
-        int m_ColumnIndex{};
-        
-        void MoveCoordinateByOne( const Direction& direction );
-        
-        bool operator==( const Coordinate& other ) const;
-        
-        friend std::ostream& operator<<( std::ostream& outputStream, const Coordinate& coordinate );
-    };
-    
-} //gw
 
-#endif //COORDINATE
+    std::vector< Direction > GetPossibleDirections( const Grid& grid, const Coordinate& currentCoordinate, Path& walkedPath );
+    bool IsDirectionPossible( const Grid& grid, const Direction& direction, const Coordinate& currentCoordinate, Path& walkedPath );
+} //gw
