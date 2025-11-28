@@ -86,27 +86,7 @@ namespace gw
     
         void WalkPaths( Path pathSoFar, const Coordinate& startCoordinate );
 
-        // void StartWalkingPathsDoubleThreaded( Path pathSoFar, const Coordinate& startCoordinate );
-        
-        // void StartWalkingPathsThreadLayer( Path pathSoFar, const Coordinate& startCoordinate, int layer = 0 );
-
-        // void StartWalkingPathsMaxThreaded( Path pathSoFar, const Coordinate &startCoordinate, int layer = 0 );
-
-    private:
-        ////////////////////////////////////////////////////////////////////////////////
-        /// Private Init Variables
-                
-        // std::mutex m_PathMutex;
-
-        // std::mutex m_ThreadMutex;
-        // std::vector< std::jthread > m_JThreads;
-
-        // std::mutex m_ActiveThreadsMutex;
-        // unsigned int m_ActiveThreads; 
-        
-        ////////////////////////////////////////////////////////////////////////////////
-        /// Private Methods
-        
+    private:        
     };
 } //gw
 

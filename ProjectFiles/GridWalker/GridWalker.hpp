@@ -14,6 +14,10 @@
 
 namespace gw
 {
+    ////////////////////////////////////////////////////////////////////////////////
+    // GridWalkerBase
+    ////////////////////////////////////////////////////////////////////////////////
+    //
     class GridWalkerBase
     {
     public:
@@ -93,7 +97,7 @@ namespace gw
     };
 
     ////////////////////////////////////////////////////////////////////////////////
-    // LayeredThreadsGridWalker
+    // ThreadsAtLayerGridWalker
     ////////////////////////////////////////////////////////////////////////////////
     //
     // Will spawn threads only once at a layer 
@@ -139,7 +143,7 @@ namespace gw
     // spawns threads until a certain layer 
     // if the layer is too low it will lose some performance
     // if it is to high it will execute too little work compared to starting a new thread
-    // use while loop
+    // use conditian variable
     //
     class ThreadsUntilLayerGridWalker : public GridWalkerBase
     {
@@ -148,54 +152,10 @@ namespace gw
         // Public Constructors & Destructors
         
         // Constructor
-        ThreadsUntilLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil );
+        ThreadsUntilLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreads );
         
         // Destructor
         virtual ~ThreadsUntilLayerGridWalker() override;
-
-        ////////////////////////////////////////////////////////////////////////////////
-        /// Public Methods
-    
-        virtual void WalkPaths( Path pathSoFar, const Coordinate& startCoordinate ) override;
-        
-    private:
-        ////////////////////////////////////////////////////////////////////////////////
-        // Private Init Variables
-
-        const int m_LayerToSpawnThreadsUntil{};
-
-        std::mutex m_AdditionalActiveThreadsMutex{};
-        unsigned int m_AdditionalActiveThreads{};
-
-        std::mutex m_ThreadMutex{};
-        std::vector< std::jthread > m_JThreads{};
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // Private Methods
-        
-        void WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer = 0 );
-    };
-
-    ////////////////////////////////////////////////////////////////////////////////
-    /// CVThreadsUntilLayerGridWalker
-    ////////////////////////////////////////////////////////////////////////////////
-    //
-    // spawns threads until a certain layer 
-    // if the layer is too low it will lose some performance
-    // if it is to high it will execute too little work compared to starting a new thread
-    // use conditian variable
-    //
-    class CVThreadsUntilLayerGridWalker : public GridWalkerBase
-    {
-    public:
-        ////////////////////////////////////////////////////////////////////////////////
-        // Public Constructors & Destructors
-        
-        // Constructor
-        CVThreadsUntilLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreads );
-        
-        // Destructor
-        virtual ~CVThreadsUntilLayerGridWalker() override;
 
         ////////////////////////////////////////////////////////////////////////////////
         // Public Methods

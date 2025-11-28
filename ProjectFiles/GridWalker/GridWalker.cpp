@@ -17,7 +17,7 @@ gw::GridWalkerBase::GridWalkerBase( const Grid& gridToWalk )
 
 gw::GridWalkerBase::~GridWalkerBase()
 {
-    // std::cout << m_PossiblePaths.size() << " possible paths\n";
+    std::cout << m_PossiblePaths.size() << " possible paths\n";
 }
 
 const gw::Grid &gw::GridWalkerBase::GetGridReference() const
@@ -195,22 +195,8 @@ gw::ThreadsUntilLayerGridWalker::ThreadsUntilLayerGridWalker( const Grid& gridTo
 
 gw::ThreadsUntilLayerGridWalker::~ThreadsUntilLayerGridWalker()
 {
-    // other threads than main can spawn threads 
-    // so main execution will be here before threads spawned by others are here
-    // so we keep this thread looping until we have no more active threads
-    // we also don't need to join them then anymore since they will be joined and only after that is active threads decreased
-    do 
-    {
-
-    } while ( m_AdditionalActiveThreads != 0 );
-
-    // we still join the threads because the final thread to finish will set the additional active threads value to zero before it terminates
-    for ( std::jthread& jthread : m_JThreads )
-    {
-        jthread.join();
-    }
-
-    // sounds like all we need is a condition variable actually
+    std::unique_lock lockActiveThreads{ m_AdditionalActiveThreadsMutex };
+    m_ConditionVaricableThreadExecution.wait( lockActiveThreads, [&](){ return m_AdditionalActiveThreads == 0; } );
 }
 
 void gw::ThreadsUntilLayerGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
@@ -219,74 +205,6 @@ void gw::ThreadsUntilLayerGridWalker::WalkPaths( Path pathSoFar, const Coordinat
 }
 
 void gw::ThreadsUntilLayerGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
-{
-    auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
-    const std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
-
-    for ( const Direction& possibleDirection : possibleDirections )
-    {
-        currentPathDirection = possibleDirection;
-
-        Coordinate nextCoordinate{ currentPathCoordinate };
-        nextCoordinate.MoveCoordinateByOne( possibleDirection );
-        
-        if ( layer <= m_LayerToSpawnThreadsUntil )
-        {
-            if ( std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
-                 m_AdditionalActiveThreads <= std::thread::hardware_concurrency() )
-            {
-                std::scoped_lock threadLock{ m_ThreadMutex };
-                
-                m_JThreads.emplace_back
-                (
-                    std::jthread
-                    {
-                        [ =, this ]()
-                        {
-                            WalkPathsSingle( pathSoFar, nextCoordinate, layer + 1 );
-                            
-                            std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
-                            --m_AdditionalActiveThreads;
-                        }
-                    }
-                );
-
-                ++m_AdditionalActiveThreads;
-
-                continue;
-            }
-        }
-        WalkPathsSingle( pathSoFar, nextCoordinate, layer + 1 );
-    }
-
-    if ( pathSoFar.Length() == GetGridReference().Size() )
-    {
-        AddPossiblePath( pathSoFar );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// CVThreadsUntilLayerGridWalker
-////////////////////////////////////////////////////////////////////////////////
-
-gw::CVThreadsUntilLayerGridWalker::CVThreadsUntilLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil )
-    : GridWalkerBase( gridToWalk )
-    , m_LayerToSpawnThreadsUntil{ layerToSpawnThreadsUntil }
-{
-}
-
-gw::CVThreadsUntilLayerGridWalker::~CVThreadsUntilLayerGridWalker()
-{
-    std::unique_lock lockActiveThreads{ m_AdditionalActiveThreadsMutex };
-    m_ConditionVaricableThreadExecution.wait( lockActiveThreads, [&](){ return m_AdditionalActiveThreads == 0; } );
-}
-
-void gw::CVThreadsUntilLayerGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
-{
-    WalkPathsSingle( pathSoFar, startCoordinate );
-}
-
-void gw::CVThreadsUntilLayerGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
 {
     auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     const std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
