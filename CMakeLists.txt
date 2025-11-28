@@ -1,5 +1,5 @@
 #GENERAL PROJECT
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.11.0)
 
 set(TARGET_NAME TestWar)
 
@@ -29,11 +29,24 @@ set(PROJECT_SOURCE_FILES
 #
 
 #EXECUTABLE
-add_executable( ${TARGET_NAME} ${PROJECT_SOURCE_FILES})
+add_executable(${TARGET_NAME} ${PROJECT_SOURCE_FILES})
 #
 
 #TELL COMPILER WHERE TO LOOK IN CASE NOT MATCHING WITH PROJECT_FILES_DIRECTORY
 target_include_directories(${TARGET_NAME} PRIVATE ${PROJECT_FILES_DIRECTORY})
+#
+
+#LIBRARIES
+include(FetchContent)
+set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON CACHE BOOL "Download and build Google Test for benchmark")
+FetchContent_Declare(
+  benchmark
+  GIT_REPOSITORY https://github.com/google/benchmark.git
+  GIT_TAG v1.8.3
+)
+FetchContent_MakeAvailable(benchmark)
+
+target_link_libraries(${TARGET_NAME} PRIVATE benchmark::benchmark)
 #
 
 #COMPILER FLAGS

@@ -6,47 +6,46 @@
 
 #include "GridWalker/GridWalker.hpp"
 #include "GridWalker/GridWalkerCRTP.hpp"
-#include "Timer/MeasureExecutionTimer.hpp"
-#include "Recursion/DecimalToBinary.hpp"
+#include "benchmark/benchmark.h"
 
-template< typename T, typename...Args > 
-void WalkGridTimed( const gw::Grid& grid, Args&&... args )
+constexpr int rows{ 2 };
+constexpr int columns{ rows };
+
+void WalkGridOOP( benchmark::State& state )
 {
-    constexpr int NrRepititions{ 1 };
-    constexpr int NrObjects{ 1 };
+    const gw::Grid grid{ rows, columns };
 
     using GridWalker = std::unique_ptr< gw::GridWalkerBase >;
-    std::vector< GridWalker > gridWalkers{};
-    for ( int idx{}; idx < NrObjects; ++idx )
+    GridWalker gridWalker{ std::make_unique< gw::RecursiveGridWalker >( grid ) };
+
+    for( auto _ : state )
     {
-        gridWalkers.emplace_back( std::make_unique< T >( grid, std::forward< Args >( args )... ) );
+        gridWalker->WalkPaths( gw::Path{ grid }, gw::Coordinate{ 0, 0 } );
     }
     
-    auto FunctionToMeasure 
-    {
-        [ & ]()
-        {
-            for ( GridWalker& gridWalker : gridWalkers )
-            {
-                gridWalker->WalkPaths( gw::Path{ grid }, gw::Coordinate{ 0, 0 } );
-            }
-        }
-    };
-    
-    xtm::MeasureExecutionTimer extimer{ FunctionToMeasure, NrRepititions };
-    
-    gridWalkers.clear();
+    benchmark::DoNotOptimize( gridWalker );
+    state.SetItemsProcessed( state.iterations() );
 }
 
-int main()
+
+void WalkGridCRTP( benchmark::State& state )
 {
-    const gw::Grid grid{ 6, 6 };
+    const gw::Grid grid{ rows, columns };
+
+    using GridWalker = std::unique_ptr< gw::CRTPGridWalkerBase< gw::CRTPRecursiveGridWalker > >;
+    GridWalker gridWalker{ std::make_unique< gw::CRTPRecursiveGridWalker >( grid ) };
+
+    for( auto _ : state )
+    {
+        gridWalker->WalkPaths( gw::Path{ grid }, gw::Coordinate{ 0, 0 } );
+    }
     
-    constexpr int layer{ 3 };
-    //fastest to slowest
-    WalkGridTimed< gw::CVMaxThreadedGridWalker >( grid, layer );
-    WalkGridTimed< gw::MaxThreadedGridWalker >( grid, layer );
-    WalkGridTimed< gw::LayeredThreadsGridWalker >( grid, layer );
-    WalkGridTimed< gw::DoubleThreadedGridWalker >( grid );
-    WalkGridTimed< gw::RecursiveGridWalker >( grid );
+    benchmark::DoNotOptimize( gridWalker );
+    state.SetItemsProcessed( state.iterations() );
 }
+
+constexpr int iterations{ 1000000 };
+BENCHMARK( WalkGridOOP )->Iterations( iterations );
+BENCHMARK( WalkGridCRTP )->Iterations( iterations );
+
+BENCHMARK_MAIN();

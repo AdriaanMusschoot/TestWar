@@ -22,13 +22,13 @@ gw::Grid::Grid( int rows, int columns )
         currentCell.m_ColumnIndex  = idx % columns;
     }
 
-    std::cout << rows << " x " << columns << " grid created";
-    std::cout << *this;
+    // std::cout << rows << " x " << columns << " grid created";
+    // std::cout << *this;
 }
 
 gw::Grid::~Grid()
 {
-    std::cout << "\n" << m_GridCells.size() << " cells destroyed\n";
+    // std::cout << "\n" << m_GridCells.size() << " cells destroyed\n";
 }
 
 bool gw::Grid::IsWithinGridBounds( const Coordinate& coordinate ) const

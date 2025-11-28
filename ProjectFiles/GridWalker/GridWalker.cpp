@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-/// Includes
+// Includes
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "GridWalker.hpp"
@@ -7,7 +7,7 @@
 #include "Direction.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GridWalkerBase
+// GridWalkerBase
 ////////////////////////////////////////////////////////////////////////////////
 
 gw::GridWalkerBase::GridWalkerBase( const Grid& gridToWalk )
@@ -17,7 +17,7 @@ gw::GridWalkerBase::GridWalkerBase( const Grid& gridToWalk )
 
 gw::GridWalkerBase::~GridWalkerBase()
 {
-    std::cout << m_PossiblePaths.size() << " possible paths\n";
+    // std::cout << m_PossiblePaths.size() << " possible paths\n";
 }
 
 const gw::Grid &gw::GridWalkerBase::GetGridReference() const
@@ -32,7 +32,7 @@ void gw::GridWalkerBase::AddPossiblePath( const Path& path )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// RecursiveGridWalker
+// RecursiveGridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
 gw::RecursiveGridWalker::RecursiveGridWalker( const Grid& gridToWalk )
@@ -63,7 +63,7 @@ void gw::RecursiveGridWalker::WalkPaths( Path pathSoFar, const Coordinate& start
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DoubleThreadedGridWalker
+// DoubleThreadedGridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
 gw::DoubleThreadedGridWalker::DoubleThreadedGridWalker( const Grid& gridToWalk )
@@ -119,16 +119,16 @@ void gw::DoubleThreadedGridWalker::WalkPathsSingle(Path pathSoFar, const Coordin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// LayeredThreadsGridWalker
+// ThreadsAtLayerGridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-gw::LayeredThreadsGridWalker::LayeredThreadsGridWalker( const Grid& gridToWalk, int layerToSpawnThreads )
+gw::ThreadsAtLayerGridWalker::ThreadsAtLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreads )
     : GridWalkerBase( gridToWalk )
     , m_LayerToSpawnThreads{ layerToSpawnThreads }
 {
 }
 
-gw::LayeredThreadsGridWalker::~LayeredThreadsGridWalker()
+gw::ThreadsAtLayerGridWalker::~ThreadsAtLayerGridWalker()
 {
     // there is only the main thread that can spawn other threads
     // so when execution arrives here all possible threads will have been spawned
@@ -138,12 +138,12 @@ gw::LayeredThreadsGridWalker::~LayeredThreadsGridWalker()
     }
 }
 
-void gw::LayeredThreadsGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
+void gw::ThreadsAtLayerGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
 {
     WalkPathsSingle( pathSoFar, startCoordinate );
 }
 
-void gw::LayeredThreadsGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
+void gw::ThreadsAtLayerGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
 {
     auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     const std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
@@ -184,16 +184,16 @@ void gw::LayeredThreadsGridWalker::WalkPathsSingle( Path pathSoFar, const Coordi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// MaxThreadedGridWalker
+// ThreadsUntilLayerGridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-gw::MaxThreadedGridWalker::MaxThreadedGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil )
+gw::ThreadsUntilLayerGridWalker::ThreadsUntilLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil )
     : GridWalkerBase( gridToWalk )
     , m_LayerToSpawnThreadsUntil{ layerToSpawnThreadsUntil }
 {
 }
 
-gw::MaxThreadedGridWalker::~MaxThreadedGridWalker()
+gw::ThreadsUntilLayerGridWalker::~ThreadsUntilLayerGridWalker()
 {
     // other threads than main can spawn threads 
     // so main execution will be here before threads spawned by others are here
@@ -213,12 +213,12 @@ gw::MaxThreadedGridWalker::~MaxThreadedGridWalker()
     // sounds like all we need is a condition variable actually
 }
 
-void gw::MaxThreadedGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
+void gw::ThreadsUntilLayerGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
 {
     WalkPathsSingle( pathSoFar, startCoordinate );
 }
 
-void gw::MaxThreadedGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
+void gw::ThreadsUntilLayerGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
 {
     auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     const std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
@@ -266,27 +266,27 @@ void gw::MaxThreadedGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinat
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CVMaxThreadedGridWalker
+// CVThreadsUntilLayerGridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-gw::CVMaxThreadedGridWalker::CVMaxThreadedGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil )
+gw::CVThreadsUntilLayerGridWalker::CVThreadsUntilLayerGridWalker( const Grid& gridToWalk, int layerToSpawnThreadsUntil )
     : GridWalkerBase( gridToWalk )
     , m_LayerToSpawnThreadsUntil{ layerToSpawnThreadsUntil }
 {
 }
 
-gw::CVMaxThreadedGridWalker::~CVMaxThreadedGridWalker()
+gw::CVThreadsUntilLayerGridWalker::~CVThreadsUntilLayerGridWalker()
 {
     std::unique_lock lockActiveThreads{ m_AdditionalActiveThreadsMutex };
     m_ConditionVaricableThreadExecution.wait( lockActiveThreads, [&](){ return m_AdditionalActiveThreads == 0; } );
 }
 
-void gw::CVMaxThreadedGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
+void gw::CVThreadsUntilLayerGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
 {
     WalkPathsSingle( pathSoFar, startCoordinate );
 }
 
-void gw::CVMaxThreadedGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
+void gw::CVThreadsUntilLayerGridWalker::WalkPathsSingle( Path pathSoFar, const Coordinate& startCoordinate, int layer )
 {
     auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     const std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
@@ -315,7 +315,13 @@ void gw::CVMaxThreadedGridWalker::WalkPathsSingle( Path pathSoFar, const Coordin
 
                             std::scoped_lock activeThreadLock{ m_AdditionalActiveThreadsMutex };
                             --m_AdditionalActiveThreads;
-                            m_ConditionVaricableThreadExecution.notify_one();
+                            if ( m_AdditionalActiveThreads == 0 )
+                            {
+                                // notify_one -> activate one thread waiting on this var
+                                // notify_all -> activate all threads waiting on this var
+                                // no difference between notify_one and notify_all since the only thread waiting is the main thread
+                                m_ConditionVaricableThreadExecution.notify_one();
+                            }
                         }
                     }
                 );

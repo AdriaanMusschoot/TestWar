@@ -36,5 +36,5 @@ xtm::MeasureExecutionTimer::~MeasureExecutionTimer()
     const double total{ std::accumulate( m_ElapsedTimes.begin() + outlierNumber, m_ElapsedTimes.end() - outlierNumber, 0.0 ) };
     const double avg{ total / m_ElapsedTimes.size() };
 
-    std::cout << avg << " seconds\n";
+    std::cout << "avg execution time: " << avg << " seconds\n";
 }
