@@ -63,15 +63,15 @@ void gw::RecursiveGridWalker::WalkPaths( Path pathSoFar, const Coordinate& start
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// DoubleThreadedGridWalker
+// StartThreadedGridWalker
 ////////////////////////////////////////////////////////////////////////////////
 
-gw::DoubleThreadedGridWalker::DoubleThreadedGridWalker( const Grid& gridToWalk )
+gw::StartThreadedGridWalker::StartThreadedGridWalker( const Grid& gridToWalk )
     : GridWalkerBase( gridToWalk )
 {
 }
 
-void gw::DoubleThreadedGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
+void gw::StartThreadedGridWalker::WalkPaths( Path pathSoFar, const Coordinate& startCoordinate )
 {
     auto& [ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };
@@ -97,7 +97,7 @@ void gw::DoubleThreadedGridWalker::WalkPaths( Path pathSoFar, const Coordinate& 
     }
 }
 
-void gw::DoubleThreadedGridWalker::WalkPathsSingle(Path pathSoFar, const Coordinate &startCoordinate)
+void gw::StartThreadedGridWalker::WalkPathsSingle(Path pathSoFar, const Coordinate &startCoordinate)
 {
     auto&[ currentPathCoordinate, currentPathDirection ] = pathSoFar.AddStep( startCoordinate );
     std::vector< Direction > possibleDirections{ GetPossibleDirections( GetGridReference(), currentPathCoordinate, pathSoFar ) };

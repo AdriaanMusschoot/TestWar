@@ -72,17 +72,17 @@ namespace gw
     };
     
     ////////////////////////////////////////////////////////////////////////////////
-    /// DoubleThreadedGridWalker
+    /// StartThreadedGridWalker
     ////////////////////////////////////////////////////////////////////////////////
     //
-    class DoubleThreadedGridWalker : public GridWalkerBase
+    class StartThreadedGridWalker : public GridWalkerBase
     {
     public:
         ////////////////////////////////////////////////////////////////////////////////
         // Public Constructors & Destructors
         
         // Constructor
-        DoubleThreadedGridWalker( const Grid& gridToWalk );
+        StartThreadedGridWalker( const Grid& gridToWalk );
         
         ////////////////////////////////////////////////////////////////////////////////
         // Public Methods

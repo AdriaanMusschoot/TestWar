@@ -14,9 +14,9 @@ constexpr int columns{ rows };
 constexpr int iterations{ 1 };
 
 template< typename T >
-concept GridWalkerOOP = std::is_base_of_v< gw::GridWalkerBase, T >;
+concept GridWalkerInheritance = std::is_base_of_v< gw::GridWalkerBase, T >;
 
-template< GridWalkerOOP T, typename... Args > 
+template< GridWalkerInheritance T, typename... Args > 
 void BM_WalkGrid_Inheritance( benchmark::State& state, Args&&... args )
 {
     const gw::Grid grid{ rows, columns };
@@ -56,8 +56,8 @@ void BM_WalkGrid_CRTP( benchmark::State& state, Args&&... args )
 // BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::RecursiveGridWalker >( state ); } )->Iterations( iterations );
 // BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_CRTP< gw::CRTPRecursiveGridWalker >( state ); } )->Iterations( iterations );
 
-BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::DoubleThreadedGridWalker >( state ); } )->Iterations( iterations );
-BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::ThreadsAtLayerGridWalker >( state , 1 ); } )->Iterations( iterations );
-BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::ThreadsUntilLayerGridWalker >( state , 1 ); } )->Iterations( iterations );
+BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::StartThreadedGridWalker >( state ); } )->Iterations( iterations );
+// BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::ThreadsAtLayerGridWalker >( state , 2 ); } )->Iterations( iterations );
+// BENCHMARK( []( benchmark::State& state ){ BM_WalkGrid_Inheritance< gw::ThreadsUntilLayerGridWalker >( state , 2 ); } )->Iterations( iterations );
 
 BENCHMARK_MAIN();
